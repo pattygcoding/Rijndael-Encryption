@@ -25,11 +25,13 @@ npm run data       # only regenerate public/encryption-data.js
 npm run typecheck  # vue-tsc --noEmit
 ```
 
-`tools/generate-data.mjs` reads the real `<Language>/<bits>bit/Rijndael<ext>`
-files (plus `Python/rijndael.py`), records each file's mode and library, and
-writes `public/encryption-data.js`. `npm start` and `npm run build` run it first,
-so a new implementation shows up without editing the app. Every generated entry
-links back to its exact folder on GitHub (`C#` is URL-encoded as `C%23`).
+Every implementation lives under `langs/`, as
+`langs/<Language>/<bits>bit/Rijndael<ext>` plus the standalone
+`langs/Python/rijndael.py`. `tools/generate-data.mjs` reads those real files,
+records each one's mode and library, and writes `public/encryption-data.js`.
+`npm start` and `npm run build` run it first, so a new implementation shows up
+without editing the app. Every generated entry links back to its exact folder on
+GitHub (`langs/C#` is URL-encoded as `langs/C%23`).
 
 The published site lives at **<https://encryption.pattygcoding.com/>**.
 
@@ -91,8 +93,10 @@ the suite is usable with a partial setup. To run everything you need:
 | Ruby | Ruby with OpenSSL support (standard) |
 
 Build output goes to `tests/build/`, which is ignored by git. Add a language by
-writing its implementation to the protocol above, registering it in `LANGUAGES`
-in `tests/run_tests.py`, and running the suite.
+writing `langs/<Language>/<bits>bit/Rijndael<ext>` to the protocol above, adding it
+to `LANGUAGES` in `tests/run_tests.py` (for the suite) and to `LANGUAGES` in
+`tools/generate-data.mjs` (for the dashboard), then running the suite and
+`npm run data`.
 
 ### Deploying to GitHub Pages
 

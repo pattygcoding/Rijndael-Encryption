@@ -42,21 +42,21 @@ class Case:
 
 
 LANGUAGES = [
-    ("c", "C", "C/{bits}bit/Rijndael.c", "c"),
-    ("cpp", "C++", "C++/{bits}bit/Rijndael.cpp", "cpp"),
-    ("csharp", "C#", "C#/{bits}bit/Rijndael.cs", "csharp"),
-    ("haskell", "Haskell", "Haskell/{bits}bit/Rijndael.hs", "haskell"),
-    ("java", "Java", "Java/{bits}bit/Rijndael.java", "java"),
-    ("javascript", "JavaScript", "JavaScript/{bits}bit/Rijndael.js", "node"),
-    ("kotlin", "Kotlin", "Kotlin/{bits}bit/Rijndael.kt", "kotlin"),
-    ("php", "PHP", "PHP/{bits}bit/Rijndael.php", "php"),
-    ("python", "Python", "Python/{bits}bit/Rijndael.py", "python"),
-    ("ruby", "Ruby", "Ruby/{bits}bit/Rijndael.rb", "ruby"),
-    ("typescript", "TypeScript", "TypeScript/{bits}bit/Rijndael.ts", "typescript"),
+    ("c", "C", "langs/C/{bits}bit/Rijndael.c", "c"),
+    ("cpp", "C++", "langs/C++/{bits}bit/Rijndael.cpp", "cpp"),
+    ("csharp", "C#", "langs/C#/{bits}bit/Rijndael.cs", "csharp"),
+    ("haskell", "Haskell", "langs/Haskell/{bits}bit/Rijndael.hs", "haskell"),
+    ("java", "Java", "langs/Java/{bits}bit/Rijndael.java", "java"),
+    ("javascript", "JavaScript", "langs/JavaScript/{bits}bit/Rijndael.js", "node"),
+    ("kotlin", "Kotlin", "langs/Kotlin/{bits}bit/Rijndael.kt", "kotlin"),
+    ("php", "PHP", "langs/PHP/{bits}bit/Rijndael.php", "php"),
+    ("python", "Python", "langs/Python/{bits}bit/Rijndael.py", "python"),
+    ("ruby", "Ruby", "langs/Ruby/{bits}bit/Rijndael.rb", "ruby"),
+    ("typescript", "TypeScript", "langs/TypeScript/{bits}bit/Rijndael.ts", "typescript"),
 ]
 
 EXTRA_CASES = [
-    ("python-cryptography", "Python (cryptography)", "Python/rijndael.py", 256, "python"),
+    ("python-cryptography", "Python (cryptography)", "langs/Python/rijndael.py", 256, "python"),
 ]
 
 

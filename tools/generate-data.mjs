@@ -1,7 +1,8 @@
 // Builds `public/encryption-data.js` from the real implementations in this
-// repository: every `<Language>/<bits>bit/Rijndael<ext>` file becomes one entry,
-// plus the standalone `Python/rijndael.py` example.  The Vue app reads the payload
-// from `window.ENCRYPTION_DATA`, so the browser never fetches source files itself.
+// repository: every `langs/<Language>/<bits>bit/Rijndael<ext>` file becomes one
+// entry, plus the standalone `langs/Python/rijndael.py` example.  The Vue app reads
+// the payload from `window.ENCRYPTION_DATA`, so the browser never fetches source
+// files itself.
 //
 // Run with `npm run data`; `npm start` and `npm run build` do it automatically.
 
@@ -17,17 +18,17 @@ const KEY_SIZES = [128, 192, 256];
 // Display metadata per language folder.  `id` is the address slug the dashboard
 // uses (`/c-128`), and `prism` is the Prism grammar class used for highlighting.
 const LANGUAGES = [
-    { folder: "C", name: "C", id: "c", prism: "language-c", ext: ".c", category: "Systems", api: "OpenSSL EVP" },
-    { folder: "C#", name: "C#", id: "csharp", prism: "language-csharp", ext: ".cs", category: ".NET", api: "System.Security.Cryptography" },
-    { folder: "C++", name: "C++", id: "cpp", prism: "language-cpp", ext: ".cpp", category: "Systems", api: "OpenSSL EVP" },
-    { folder: "Haskell", name: "Haskell", id: "haskell", prism: "language-haskell", ext: ".hs", category: "Functional", api: "cryptonite" },
-    { folder: "Java", name: "Java", id: "java", prism: "language-java", ext: ".java", category: "JVM", api: "Java Cryptography Architecture" },
-    { folder: "JavaScript", name: "JavaScript", id: "javascript", prism: "language-javascript", ext: ".js", category: "Web", api: "Node.js crypto" },
-    { folder: "Kotlin", name: "Kotlin", id: "kotlin", prism: "language-kotlin", ext: ".kt", category: "JVM", api: "Java Cryptography Architecture" },
-    { folder: "PHP", name: "PHP", id: "php", prism: "language-php", ext: ".php", category: "Scripting", api: "OpenSSL" },
-    { folder: "Python", name: "Python", id: "python", prism: "language-python", ext: ".py", category: "Scripting", api: "PyCryptodome" },
-    { folder: "Ruby", name: "Ruby", id: "ruby", prism: "language-ruby", ext: ".rb", category: "Scripting", api: "OpenSSL" },
-    { folder: "TypeScript", name: "TypeScript", id: "typescript", prism: "language-typescript", ext: ".ts", category: "Web", api: "Node.js crypto" },
+    { folder: "langs/C", name: "C", id: "c", prism: "language-c", ext: ".c", category: "Systems", api: "OpenSSL EVP" },
+    { folder: "langs/C#", name: "C#", id: "csharp", prism: "language-csharp", ext: ".cs", category: ".NET", api: "System.Security.Cryptography" },
+    { folder: "langs/C++", name: "C++", id: "cpp", prism: "language-cpp", ext: ".cpp", category: "Systems", api: "OpenSSL EVP" },
+    { folder: "langs/Haskell", name: "Haskell", id: "haskell", prism: "language-haskell", ext: ".hs", category: "Functional", api: "cryptonite" },
+    { folder: "langs/Java", name: "Java", id: "java", prism: "language-java", ext: ".java", category: "JVM", api: "Java Cryptography Architecture" },
+    { folder: "langs/JavaScript", name: "JavaScript", id: "javascript", prism: "language-javascript", ext: ".js", category: "Web", api: "Node.js crypto" },
+    { folder: "langs/Kotlin", name: "Kotlin", id: "kotlin", prism: "language-kotlin", ext: ".kt", category: "JVM", api: "Java Cryptography Architecture" },
+    { folder: "langs/PHP", name: "PHP", id: "php", prism: "language-php", ext: ".php", category: "Scripting", api: "OpenSSL" },
+    { folder: "langs/Python", name: "Python", id: "python", prism: "language-python", ext: ".py", category: "Scripting", api: "PyCryptodome" },
+    { folder: "langs/Ruby", name: "Ruby", id: "ruby", prism: "language-ruby", ext: ".rb", category: "Scripting", api: "OpenSSL" },
+    { folder: "langs/TypeScript", name: "TypeScript", id: "typescript", prism: "language-typescript", ext: ".ts", category: "Web", api: "Node.js crypto" },
 ];
 
 // The one implementation that is not organised by key size.
@@ -40,8 +41,8 @@ const EXTRAS = [
         keySize: 256,
         prism: "language-python",
         api: "cryptography",
-        file: "Python/rijndael.py",
-        folder: "Python",
+        file: "langs/Python/rijndael.py",
+        folder: "langs/Python",
         fixedId: true,
     },
 ];
