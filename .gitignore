@@ -1,0 +1,5 @@
+node_modules/
+dist/
+public/encryption-data.js
+*.local
+.DS_Store
