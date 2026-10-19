@@ -25,6 +25,10 @@ pnpm-debug.log*
 # C#, Haskell, Java, Kotlin and TypeScript output), so the whole folder is scratch.
 tests/build/
 
+# Manual builds the per-language READMEs document (`build/csharp-128`,
+# `build/ts-256`, ...).
+/build/
+
 # ---------------------------------------------------------------------------
 # Python (tests/ and langs/Python)
 # ---------------------------------------------------------------------------

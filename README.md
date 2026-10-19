@@ -94,9 +94,37 @@ the suite is usable with a partial setup. To run everything you need:
 
 Build output goes to `tests/build/`, which is ignored by git. Add a language by
 writing `langs/<Language>/<bits>bit/Rijndael<ext>` to the protocol above, adding it
-to `LANGUAGES` in `tests/run_tests.py` (for the suite) and to `LANGUAGES` in
-`tools/generate-data.mjs` (for the dashboard), then running the suite and
-`npm run data`.
+to `LANGUAGES` in `tests/run_tests.py` (the suite), `tools/generate-data.mjs` (the
+dashboard) and `tools/generate_language_readmes.py` (its README), then running:
+
+```sh
+python tools/generate_language_readmes.py
+python tests/run_tests.py
+npm run data
+```
+
+## Language folders
+
+Every folder under `langs/` carries its own `README.md`: the implementation's
+library, the shared protocol, the ciphertext it must produce, how to install the
+toolchain on Debian/macOS/Windows, the exact build and run commands, what it
+demonstrates, and the `--filter` that runs just that language:
+
+* [`langs/C/README.md`](langs/C/README.md), [`langs/C++/README.md`](langs/C++/README.md),
+  [`langs/C#/README.md`](langs/C%23/README.md)
+* [`langs/Haskell/README.md`](langs/Haskell/README.md), [`langs/Java/README.md`](langs/Java/README.md),
+  [`langs/JavaScript/README.md`](langs/JavaScript/README.md)
+* [`langs/Kotlin/README.md`](langs/Kotlin/README.md), [`langs/PHP/README.md`](langs/PHP/README.md),
+  [`langs/Python/README.md`](langs/Python/README.md)
+* [`langs/Ruby/README.md`](langs/Ruby/README.md), [`langs/TypeScript/README.md`](langs/TypeScript/README.md)
+
+They are generated from the same facts as the suite, so they cannot drift from
+the code:
+
+```sh
+python tools/generate_language_readmes.py          # write them
+python tools/generate_language_readmes.py --check  # fail if any is stale
+```
 
 ### Deploying to GitHub Pages
 
