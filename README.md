@@ -34,7 +34,15 @@ records each one's mode and library, and writes `public/encryption-data.js`.
 without editing the app. Every generated entry links back to its exact folder on
 GitHub (`langs/C#` is URL-encoded as `langs/C%23`).
 
-The published site lives at **<https://encryption.pattygcoding.com/>**.
+The published site lives at **<https://encryption.pattygcoding.com/>**. Every
+address it answers on — each language, key size and tab — is listed in
+[`docs/links.md`](docs/links.md), with the same list as one URL per line in
+[`docs/links.txt`](docs/links.txt):
+
+```sh
+python tools/generate_link_index.py          # write both files
+python tools/generate_link_index.py --check  # fail if either is stale
+```
 
 ## Shared console protocol
 
