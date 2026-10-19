@@ -41,6 +41,7 @@ const EXTRAS = [
         keySize: 256,
         prism: "language-python",
         api: "cryptography",
+        ext: ".py",
         file: "langs/Python/rijndael.py",
         folder: "langs/Python",
         fixedId: true,
@@ -81,6 +82,9 @@ async function readImplementation(entry, keySize, file) {
         : "";
     return {
         id: entry.fixedId ? entry.id : `${entry.id}-${keySize}`,
+        // The sidebar lists languages, not files: `languageId` is the row this
+        // implementation belongs to, and `keySize` is the dropdown value.
+        languageId: entry.id,
         name: entry.name,
         language: entry.language ?? entry.name,
         category: entry.category,
@@ -152,15 +156,43 @@ async function main() {
         languageExtensions[language.name] = language.ext;
     }
 
+    // The sidebar rows: one per language, each listing the key sizes it actually
+    // ships (the standalone Python example only has 256).
+    const languages = LANGUAGES.map((language) => ({
+        id: language.id,
+        name: language.name,
+        category: language.category,
+        prism: language.prism,
+        extension: language.ext,
+        keySizes: KEY_SIZES.filter((size) =>
+            implementations.some((item) => item.languageId === language.id && item.keySize === size),
+        ),
+    }));
+    for (const extra of EXTRAS) {
+        const item = implementations.find((entry) => entry.languageId === extra.id);
+        if (item) {
+            languages.push({
+                id: extra.id,
+                name: extra.name,
+                category: extra.category,
+                prism: extra.prism,
+                extension: extra.ext,
+                keySizes: [item.keySize],
+            });
+        }
+    }
+
     const data = {
         meta: {
             updated: new Date().toISOString().slice(0, 10),
             implementationCount: implementations.length,
             languageCount: languageNames.length,
+            entryCount: languages.length,
             repository: repositoryUrl(),
             branch: git(["rev-parse", "--abbrev-ref", "HEAD"], "main"),
         },
         keySizes: KEY_SIZES,
+        languages,
         implementations,
         languageExtensions,
     };

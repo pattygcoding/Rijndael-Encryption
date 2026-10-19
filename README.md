@@ -9,12 +9,13 @@ Some of my Rijndael encryption examples in many different programming languages.
 panel whose tabs are **Source Code**, **Overview** and **Console Output**. It also
 has a language search box, and Category and Key size filters.
 
-Every implementation has its own address, `/<language>-<bits>` — `/c-128`,
-`/csharp-256`, `/python-cryptography` — and the sidebar entries are real links, so
-they can be copied, bookmarked or opened in a new tab. The site root opens the C
-128-bit example, the reference walkthrough (`DEFAULT_IMPL_ID` in
-`src/store/data.ts`). The Overview tab carries its own address, e.g.
-`/csharp-256/overview`.
+Every language has its own address — `/c`, `/csharp`, `/python` — and the key size
+is part of it too: `/c/128`, `/csharp/256`, `/csharp/256/overview`,
+`/python-cryptography/256`. The sidebar entries are real links, so they can be
+copied, bookmarked or opened in a new tab, and the address bar follows the header's
+key-size dropdown. The site root opens C at 128 bits, the reference walkthrough
+(`DEFAULT_LANG_ID` in `src/store/data.ts`). The older one-segment addresses
+(`/c-128`, `/csharp-256/overview`) still work and are canonicalised on load.
 
 ```sh
 npm install        # once

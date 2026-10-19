@@ -4,8 +4,10 @@
 export type TabId = "code" | "overview" | "output";
 
 export interface Implementation {
-    /** The address slug, e.g. `c-128` (`/c-128`). */
+    /** The implementation address slug, e.g. `c-128`. */
     id: string;
+    /** The language row in the sidebar this implementation belongs to, e.g. `c`. */
+    languageId: string;
     /** The language name shown in the list, e.g. `C#`. */
     name: string;
     /** The language family, e.g. `Python` for the standalone example. */
@@ -27,10 +29,24 @@ export interface Implementation {
     code: string;
 }
 
+/** One sidebar row: a language and the key sizes it ships. */
+export interface LanguageEntry {
+    id: string;
+    name: string;
+    category: string;
+    prism: string;
+    /** The file-extension tag shown in the list, e.g. `.cs`. */
+    extension: string;
+    /** The key sizes this language implements, e.g. `[128, 192, 256]`. */
+    keySizes: number[];
+}
+
 export interface DataMeta {
     updated: string;
     implementationCount: number;
     languageCount: number;
+    /** Sidebar rows (languages plus the standalone Python variant). */
+    entryCount: number;
     repository: string;
     branch: string;
 }
@@ -38,6 +54,7 @@ export interface DataMeta {
 export interface DashboardData {
     meta: DataMeta;
     keySizes: number[];
+    languages: LanguageEntry[];
     implementations: Implementation[];
     /** language name -> its file-extension tag (".ts", ".cs", ...). */
     languageExtensions: Record<string, string>;

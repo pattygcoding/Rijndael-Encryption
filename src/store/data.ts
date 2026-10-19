@@ -1,4 +1,4 @@
-import type { DashboardData, Implementation } from "../types";
+import type { DashboardData, Implementation, LanguageEntry } from "../types";
 
 // Everything the dashboard displays, read straight from the generated payload.
 // These helpers are pure lookups over `DATA` - the reactive selection on top of
@@ -8,18 +8,69 @@ export const DATA: DashboardData | undefined = window.ENCRYPTION_DATA;
 // A checkout that has not run the generator yet still boots and shows the empty
 // state (which says how to generate the data) instead of throwing.
 export const hasData: boolean =
-    !!DATA && Array.isArray(DATA.implementations) && DATA.implementations.length > 0;
+    !!DATA && Array.isArray(DATA.languages) && DATA.languages.length > 0;
 
-// The implementation the showcase opens when the address names none.  The C
-// 128-bit example is the reference walkthrough; a fork without it falls back to
-// the first implementation present.
-export const DEFAULT_IMPL_ID = "c-128";
+// The language the showcase opens when the address names none.  The C example is
+// the reference walkthrough; a fork without it falls back to the first language
+// present.  The key size comes from that language's own list.
+export const DEFAULT_LANG_ID = "c";
+export const DEFAULT_KEY_SIZE = 128;
 
 // The last-resort repository, for a checkout that has not generated the data yet.
 const DEFAULT_REPOSITORY = "https://github.com/pattygcoding/Rijndael-Encryption";
 
+// The sidebar rows - one per language - and the flat implementation list behind
+// them.
+export function languages(): LanguageEntry[] {
+    return DATA?.languages ?? [];
+}
+
 export function implementations(): Implementation[] {
     return DATA?.implementations ?? [];
+}
+
+export function languageById(id: string | null): LanguageEntry | undefined {
+    if (!id) {
+        return undefined;
+    }
+    return languages().find((language) => language.id === id);
+}
+
+export function knownLanguage(id: string | null | undefined): boolean {
+    return !!id && languages().some((language) => language.id === id);
+}
+
+export function defaultLangId(): string | null {
+    const all = languages();
+    return (all.find((language) => language.id === DEFAULT_LANG_ID) ?? all[0])?.id ?? null;
+}
+
+// The key sizes a language ships, e.g. `[128, 192, 256]` - or just `[256]` for the
+// standalone Python example, which is why the dropdown is built per language.
+export function keySizesFor(langId: string | null): number[] {
+    return languageById(langId)?.keySizes ?? [];
+}
+
+export function defaultKeySize(langId: string | null): number {
+    return keySizesFor(langId)[0] ?? DEFAULT_KEY_SIZE;
+}
+
+// The implementation for a language at a key size.  A size the language does not
+// ship falls back to its first, so a stale address still shows something real.
+export function implementationFor(
+    langId: string | null,
+    keySize: number | null,
+): Implementation | undefined {
+    const language = languageById(langId);
+    if (!language) {
+        return undefined;
+    }
+    const size = keySize !== null && language.keySizes.includes(keySize)
+        ? keySize
+        : language.keySizes[0];
+    return implementations().find(
+        (item) => item.languageId === language.id && item.keySize === size,
+    );
 }
 
 export function itemById(id: string | null): Implementation | undefined {
@@ -27,15 +78,6 @@ export function itemById(id: string | null): Implementation | undefined {
         return undefined;
     }
     return implementations().find((item) => item.id === id);
-}
-
-export function knownLang(id: string | null | undefined): boolean {
-    return !!id && implementations().some((item) => item.id === id);
-}
-
-export function defaultLangId(): string | null {
-    const all = implementations();
-    return (all.find((item) => item.id === DEFAULT_IMPL_ID) ?? all[0])?.id ?? null;
 }
 
 // The folder an implementation lives in, used for its GitHub link.

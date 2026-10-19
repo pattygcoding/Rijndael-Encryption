@@ -1,8 +1,8 @@
 import { computed, reactive } from "vue";
-import type { Implementation, TabId } from "../types";
+import type { Implementation, LanguageEntry, TabId } from "../types";
 import * as data from "./data";
 
-export type MenuId = "category" | "keySize";
+export type MenuId = "category";
 
 export interface FacetOption {
     value: string;
@@ -10,12 +10,14 @@ export interface FacetOption {
 }
 
 // ---- The address ----------------------------------------------------------------
-// Every implementation is addressable on its own path: /c-128, /csharp-256,
-// /python-cryptography.  The dashboard is a static bundle, so the path is resolved
-// client-side with the History API.  A document with a null origin (file://) refuses
-// path writes, so the query-string shape (?lang=c-128) is used there instead - and
-// that query shape is also what the deployed site's 404.html shim forwards, so
-// `?lang=` and `?tab=` stay readable in both forms and older links keep working.
+// The sidebar names a language and the header dropdown names a key size, so an
+// implementation is addressable as /c/128, /csharp/256/overview or
+// /python-cryptography/256.  The dashboard is a static bundle, so the path is
+// resolved client-side with the History API.  A document with a null origin
+// (file://) refuses path writes, so the query shape (?lang=c&bits=256) is used
+// there instead - and that query shape is also what the deployed site's 404.html
+// shim forwards.  The older one-segment addresses (/c-128, /csharp-256/overview)
+// are still understood, and canonicalised on load.
 export const APP_DIR = window.location.pathname.replace(/[^/]*$/, "");
 let applyingHistory = false;
 
@@ -39,50 +41,94 @@ const canWritePath = (function probePathWrites(): boolean {
 
 interface LocationState {
     langId: string | null;
+    keySize: number | null;
     tab: TabId;
-    explicit: boolean;
+    explicitTab: boolean;
 }
 
-// What the current address asks for, in either shape.
+// A trailing tab segment names the tab; the one before it may name the key size.
+const TAB_SEGMENT = /^(code|overview|output)$/;
+
+// What the current address asks for, in either shape (and in the legacy one).
 function locationState(): LocationState {
     const tail = window.location.pathname.slice(APP_DIR.length).replace(/\/+$/, "");
     const parts = tail ? tail.split("/") : [];
-    const pathTab = parts.length === 2 && /^(code|overview|output)$/.test(parts[1])
-        ? (parts[1] as TabId)
-        : null;
     const params = new URLSearchParams(window.location.search || "");
-    const langId = data.knownLang(parts[0]) ? parts[0] : params.get("lang");
-    const rawTab = pathTab || params.get("tab");
+
+    let langId: string | null = null;
+    let keySize: number | null = null;
+    let tabSegment: TabId | null = null;
+    let rest = parts;
+
+    // The legacy single segment (`c-128`) carries both the language and the size.
+    const legacy = parts[0] ? /^(.*)-(\d+)$/.exec(parts[0]) : null;
+    if (legacy && data.knownLanguage(legacy[1])) {
+        langId = legacy[1];
+        keySize = Number(legacy[2]);
+        rest = parts.slice(1);
+    } else if (data.knownLanguage(parts[0])) {
+        langId = parts[0];
+        rest = parts.slice(1);
+        if (rest.length && /^\d+$/.test(rest[0])) {
+            keySize = Number(rest[0]);
+            rest = rest.slice(1);
+        }
+    }
+
+    if (rest.length && TAB_SEGMENT.test(rest[0])) {
+        tabSegment = rest[0] as TabId;
+    }
+
+    // The query shape, used by file:// documents and by the 404 shim.
+    if (!langId) {
+        const fromQuery = params.get("lang");
+        const legacyQuery = fromQuery ? /^(.*)-(\d+)$/.exec(fromQuery) : null;
+        if (legacyQuery && data.knownLanguage(legacyQuery[1])) {
+            langId = legacyQuery[1];
+            keySize = Number(legacyQuery[2]);
+        } else if (data.knownLanguage(fromQuery)) {
+            langId = fromQuery;
+        }
+    }
+    if (keySize === null) {
+        const bits = params.get("bits");
+        if (bits && /^\d+$/.test(bits)) {
+            keySize = Number(bits);
+        }
+    }
+
+    const rawTab = tabSegment ?? params.get("tab");
     return {
-        langId: data.knownLang(langId) ? langId : null,
+        langId,
+        keySize,
         tab: rawTab === "overview" || rawTab === "output" ? rawTab : "code",
-        explicit: !!(pathTab || params.get("tab")),
+        explicitTab: !!(tabSegment || params.get("tab")),
     };
 }
 
 // The address for what is on screen, in whichever shape the browser accepts.  Used
 // for the sidebar's real links too, so a copied or middle-clicked link carries the
-// current tab along with the implementation.
-export function stateUrl(langId: string, tab: TabId): string {
+// language, the key size and the tab.
+export function stateUrl(langId: string, keySize: number, tab: TabId): string {
     // The query shape is only the fallback for documents that refuse path writes.
-    // Addresses otherwise stay clean: the source tab is the default, so it is not
-    // named, and the Overview tab is a path segment (`/csharp-256/overview`).
     if (!canWritePath) {
         const params = new URLSearchParams();
         params.set("lang", langId);
+        params.set("bits", String(keySize));
         if (tab !== "code") {
             params.set("tab", tab);
         }
         return APP_DIR + "index.html?" + params.toString();
     }
-    return APP_DIR + langId + (tab === "code" ? "" : "/" + tab);
+    // Addresses stay clean: the source tab is the default, so it is not named.
+    return APP_DIR + langId + "/" + keySize + (tab === "code" ? "" : "/" + tab);
 }
 
 function syncUrl(mode: "push" | "replace"): void {
     if (applyingHistory || !data.hasData || !state.langId) {
         return;
     }
-    const url = stateUrl(state.langId, state.tab);
+    const url = stateUrl(state.langId, state.keySize, state.tab);
     try {
         if (mode === "push") {
             window.history.pushState(window.history.state, "", url);
@@ -95,19 +141,40 @@ function syncUrl(mode: "push" | "replace"): void {
 }
 
 // ---- The reactive selection -----------------------------------------------------
+// `langId` is the sidebar row (a language) and `keySize` is the header dropdown, so
+// the two together name the implementation being shown.
 export const state = reactive({
     langId: null as string | null,
+    keySize: data.DEFAULT_KEY_SIZE,
     tab: "code" as TabId,
     query: "",
     category: "All",
-    keySize: "All",
     sidebarOpen: false,
     openMenu: null as MenuId | null,
 });
 
 export const currentItem = computed<Implementation | undefined>(() =>
-    data.itemById(state.langId),
+    data.implementationFor(state.langId, state.keySize),
 );
+
+export const currentLanguage = computed(() => data.languageById(state.langId));
+
+// The sizes the dropdown offers for the selected language - the standalone Python
+// example only ships 256, so the list is per language rather than global.
+export const availableKeySizes = computed<number[]>(() => data.keySizesFor(state.langId));
+
+// The size to open a language at when moving between rows: the current size if that
+// language ships it, otherwise the language's first.
+export function keySizeFor(langId: string): number {
+    const sizes = data.keySizesFor(langId);
+    return sizes.includes(state.keySize) ? state.keySize : (sizes[0] ?? data.DEFAULT_KEY_SIZE);
+}
+
+// A key size taken from the address is honoured only when the language ships it.
+function resolvedKeySize(langId: string | null, keySize: number | null): number {
+    const sizes = data.keySizesFor(langId);
+    return keySize !== null && sizes.includes(keySize) ? keySize : data.defaultKeySize(langId);
+}
 
 export const repoFolderName = computed<string>(() =>
     currentItem.value ? data.repoFolder(currentItem.value) : "",
@@ -128,25 +195,24 @@ export const metaLine = computed<string>(() => {
         return "";
     }
     return (
-        meta.languageCount +
+        (meta.entryCount ?? meta.languageCount) +
         " languages · " +
         meta.implementationCount +
         " implementations\nAES-128 · AES-192 · AES-256"
     );
 });
 
-export const searchPlaceholder = "Search languages or files…";
+export const searchPlaceholder = "Search languages…";
 
-// The facet menus.  Counts make the list self-explanatory and keep every option
-// visibly tied to the filtered set.
+// The category facet counts sidebar rows, so its numbers match the list.
 export const categoryOptions = computed<FacetOption[]>(() => {
-    const items = data.implementations();
+    const rows = data.languages();
     const counts = new Map<string, number>();
-    for (const item of items) {
-        counts.set(item.category, (counts.get(item.category) ?? 0) + 1);
+    for (const row of rows) {
+        counts.set(row.category, (counts.get(row.category) ?? 0) + 1);
     }
     const options: FacetOption[] = [
-        { value: "All", label: "All categories (" + items.length + ")" },
+        { value: "All", label: "All categories (" + rows.length + ")" },
     ];
     for (const [name, count] of counts) {
         options.push({ value: name, label: name + " (" + count + ")" });
@@ -154,57 +220,50 @@ export const categoryOptions = computed<FacetOption[]>(() => {
     return options;
 });
 
-export const keySizeOptions = computed<FacetOption[]>(() => {
-    const items = data.implementations();
-    const options: FacetOption[] = [{ value: "All", label: "All key sizes" }];
-    for (const size of data.DATA?.keySizes ?? []) {
-        const count = items.filter((item) => item.keySize === size).length;
-        options.push({ value: String(size), label: size + "-bit (" + count + ")" });
-    }
-    return options;
-});
-
-export const visibleItems = computed<Implementation[]>(() => {
+// One row per language; the key size is chosen in the header, not filtered here.
+export const visibleLanguages = computed<LanguageEntry[]>(() => {
     const query = state.query.trim().toLowerCase();
-    return data.implementations().filter((item) => {
-        if (state.category !== "All" && item.category !== state.category) {
-            return false;
-        }
-        if (state.keySize !== "All" && String(item.keySize) !== state.keySize) {
+    return data.languages().filter((language) => {
+        if (state.category !== "All" && language.category !== state.category) {
             return false;
         }
         if (!query) {
             return true;
         }
         const haystack = (
-            item.name +
-            " " +
-            item.file +
-            " " +
-            item.category +
-            " " +
-            item.keySize
+            language.name + " " + language.category + " " + language.id
         ).toLowerCase();
         return haystack.includes(query);
     });
 });
 
 export const listMessage = computed<string>(() =>
-    data.implementations().length
-        ? "No implementations match those filters."
-        : "No implementations found.",
+    data.languages().length
+        ? "No languages match those filters."
+        : "No languages found.",
 );
 
 // ---- Moving around --------------------------------------------------------------
-function applySelection(id: string): void {
-    state.langId = id;
+function applySelection(langId: string, keySize: number): void {
+    state.langId = langId;
+    state.keySize = keySize;
     syncUrl("push");
 }
 
 export function selectLanguage(id: string): void {
-    applySelection(id);
+    // Keep the current key size when the new language ships it.
+    applySelection(id, keySizeFor(id));
     // A tap on a list row ends that interaction, so the mobile drawer goes away.
     state.sidebarOpen = false;
+}
+
+// The header's key-size dropdown: the same language, a different file.
+export function selectKeySize(keySize: number): void {
+    if (state.keySize === keySize) {
+        return;
+    }
+    state.keySize = keySize;
+    syncUrl("push");
 }
 
 export function switchTab(tab: TabId): void {
@@ -219,8 +278,8 @@ export function setQuery(value: string): void {
     state.query = value;
 }
 
-export function setFacet(id: "category" | "keySize", value: string): void {
-    state[id] = value;
+export function setFacet(value: string): void {
+    state.category = value;
 }
 
 export function toggleSidebar(): void {
@@ -247,7 +306,8 @@ function applyLocation(): void {
     applyingHistory = true;
     const target = locationState();
     state.langId = target.langId ?? data.defaultLangId();
-    state.tab = target.explicit ? target.tab : "code";
+    state.keySize = resolvedKeySize(state.langId, target.keySize);
+    state.tab = target.explicitTab ? target.tab : "code";
     applyingHistory = false;
     syncUrl("replace");
 }
@@ -260,7 +320,8 @@ export function initSession(): void {
     }
     const target = locationState();
     state.langId = target.langId ?? data.defaultLangId();
-    state.tab = target.explicit ? target.tab : "code";
+    state.keySize = resolvedKeySize(state.langId, target.keySize);
+    state.tab = target.explicitTab ? target.tab : "code";
     syncUrl("replace");
     window.addEventListener("popstate", applyLocation);
 }

@@ -34,19 +34,29 @@
             var last = parts.pop() || "";
             var tab = last === "code" || last === "overview" || last === "output" ? last : "";
             if (tab) { last = parts.pop() || ""; }
-            // An implementation id is a bare slug (e.g. "c-128").  Anything else - a
-            // missing .html, a directory - is junk, so drop one more level and keep
-            // climbing towards the deployment root instead of bouncing back here.
-            var slug = /^[a-z0-9][a-z0-9_-]*$/i.test(last) ? last : "";
-            if (!slug) { parts.pop(); }
+            // The key size is a numeric segment: /c/256, /csharp/128/overview.
+            var bits = /^\d+$/.test(last) ? last : "";
+            if (bits) { last = parts.pop() || ""; }
+            // The older single segment carried both: /c-128, /csharp-256.
+            var legacy = /^(.*)-(\d+)$/.exec(last);
+            var lang = "";
+            if (!bits && legacy) { lang = legacy[1]; bits = legacy[2]; }
+            else if (/^[a-z0-9][a-z0-9_-]*$/i.test(last)) { lang = last; }
+            // A path that names neither a language nor a size is junk, so drop one
+            // more level and keep climbing towards the deployment root instead of
+            // bouncing back here for ever.
+            if (!lang && !bits) { parts.pop(); }
             // Anything else the link carried has to survive the trip.
             var params = new URLSearchParams(window.location.search || "");
             params.delete("lang");
+            params.delete("bits");
             if (tab) { params.set("tab", tab); }
             var query = params.toString();
             var target = parts.join("/") + "/index.html";
-            if (slug) { target += "?lang=" + encodeURIComponent(slug); }
-            if (query) { target += (slug ? "&" : "?") + query; }
+            var separator = "?";
+            if (lang) { target += separator + "lang=" + encodeURIComponent(lang); separator = "&"; }
+            if (bits) { target += separator + "bits=" + encodeURIComponent(bits); separator = "&"; }
+            if (query) { target += separator + query; }
             document.getElementById("fallback").href = target;
             // Same icon as the dashboard, built from the path we just climbed.
             var icon = document.createElement("link");

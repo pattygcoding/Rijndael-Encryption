@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { TabId } from "../types";
-import { languageTag } from "../store/data";
 import {
+    availableKeySizes,
     currentItem,
+    currentLanguage,
     outputAvailable,
     repoFolderName,
     repoUrl,
+    selectKeySize,
     state,
     switchTab,
     toggleSidebar,
@@ -27,6 +29,11 @@ const repoLabel = computed<string>(() =>
 function tabClass(tab: TabId): string {
     return "px-4 py-1.5 rounded text-sm font-medium transition " +
         (state.tab === tab ? "bg-mint-400 text-on-accent" : "text-fg-muted hover:text-fg");
+}
+
+// The key-size dropdown swaps the file the panel shows, keeping the language.
+function onKeySizeChange(event: Event): void {
+    selectKeySize(Number((event.target as HTMLSelectElement).value));
 }
 </script>
 
@@ -50,13 +57,23 @@ function tabClass(tab: TabId): string {
                     <span class="truncate min-w-0">{{ repoLabel }}</span>
                 </a>
                 <div v-if="currentItem" class="mt-2 flex flex-wrap items-center gap-1.5">
-                    <span class="lang-tag" :title="currentItem.language">{{ languageTag(currentItem.language) }}</span>
-                    <span class="micro px-1.5 py-0.5 rounded border border-accent/30 text-accent/90">{{ currentItem.keySize }}-bit key</span>
+                    <span class="lang-tag" :title="currentLanguage?.name">{{ currentLanguage?.extension }}</span>
                     <span class="micro px-1.5 py-0.5 rounded border border-line/10 text-fg-dim">{{ currentItem.category }}</span>
                 </div>
             </div>
         </div>
         <div class="flex flex-wrap items-center gap-3">
+            <!-- The key size picks which file this language is showing; the list of
+                 sizes comes from the language, so a 256-bit-only example offers one
+                 option rather than a dead choice. -->
+            <label v-if="availableKeySizes.length" class="flex items-center gap-2 micro text-fg-dim">
+                Key size
+                <select :value="state.keySize" @change="onKeySizeChange"
+                        class="micro bg-ink-950 border border-line/10 rounded-md px-2 py-1.5 text-fg-soft
+                               focus:outline-none focus:border-accent/60 transition">
+                    <option v-for="size in availableKeySizes" :key="size" :value="size">{{ size }}-bit</option>
+                </select>
+            </label>
             <div class="flex space-x-1 bg-ink-900 border border-line/5 p-1 rounded-md">
                 <button type="button" @click="switchTab('code')" :class="tabClass('code')">Source Code</button>
                 <button type="button" @click="switchTab('overview')" :class="tabClass('overview')">Overview</button>

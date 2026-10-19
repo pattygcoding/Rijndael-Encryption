@@ -3,7 +3,6 @@ import { computed } from "vue";
 import { repoHomeUrl } from "../store/data";
 import {
     categoryOptions,
-    keySizeOptions,
     metaLine,
     searchPlaceholder,
     setFacet,
@@ -53,11 +52,7 @@ const drawerClass = computed<string>(() =>
                           placeholder-hint focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/20 transition" />
             <div class="flex items-center gap-2">
                 <p class="micro text-fg-dim shrink-0 w-[4.75rem]">Category</p>
-                <FacetDropdown id="category" :options="categoryOptions" @pick="setFacet('category', $event)" />
-            </div>
-            <div class="flex items-center gap-2">
-                <p class="micro text-fg-dim shrink-0 w-[4.75rem]">Key size</p>
-                <FacetDropdown id="keySize" :options="keySizeOptions" @pick="setFacet('keySize', $event)" />
+                <FacetDropdown id="category" :options="categoryOptions" @pick="setFacet($event)" />
             </div>
         </div>
         <ItemList />
