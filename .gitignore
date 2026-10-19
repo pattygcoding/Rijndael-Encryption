@@ -1,9 +1,87 @@
+# ---------------------------------------------------------------------------
+# Generated showcase data
+# ---------------------------------------------------------------------------
+# `npm run data` (tools/generate-data.mjs) writes this from the real
+# implementations, and the deploy workflow regenerates it before every build, so
+# a committed copy would only ever be stale.
+public/encryption-data.js
+
+# ---------------------------------------------------------------------------
+# Node / Vite (the dashboard in src/)
+# ---------------------------------------------------------------------------
 node_modules/
 dist/
-public/encryption-data.js
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------------------------------------------------------------------------
+# Test suite
+# ---------------------------------------------------------------------------
+# `python tests/run_tests.py` compiles every implementation in here (C, C++,
+# C#, Haskell, Java, Kotlin and TypeScript output), so the whole folder is scratch.
 tests/build/
+
+# ---------------------------------------------------------------------------
+# Python (tests/ and langs/Python)
+# ---------------------------------------------------------------------------
 __pycache__/
-.metals/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# ---------------------------------------------------------------------------
+# C / C++ (OpenSSL examples)
+# ---------------------------------------------------------------------------
+*.o
+*.obj
+*.exe
+*.out
+
+# ---------------------------------------------------------------------------
+# .NET (the C# example, plus the per-case projects the suite generates)
+# ---------------------------------------------------------------------------
+bin/
+obj/
+*.user
+
+# ---------------------------------------------------------------------------
+# Haskell (GHC interface/object files and the package environment)
+# ---------------------------------------------------------------------------
+*.hi
+*.dyn_hi
+*.dyn_o
+.ghc.environment.*
+
+# ---------------------------------------------------------------------------
+# Java / Kotlin (class files and the runnable jars kotlinc writes)
+# ---------------------------------------------------------------------------
+*.class
+*.jar
+
+# ---------------------------------------------------------------------------
+# Editors and operating systems
+# ---------------------------------------------------------------------------
+# A shared .vscode/settings.json can still be committed on purpose with
+# `git add -f .vscode/settings.json`.
 .vscode/
-*.local
+.idea/
+.metals/
+.bloop/
+*.swp
+*~
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------------------
+# Local configuration and secrets
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.local
