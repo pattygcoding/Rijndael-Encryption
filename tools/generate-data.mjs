@@ -71,6 +71,13 @@ async function readImplementation(entry, keySize, file) {
         // Aes.Create() defaults to CBC when the source never names the mode.
         mode = "CBC (default)";
     }
+    // The verified output every implementation of this key size prints, captured by
+    // tests/run_tests.py.  A checkout that has not run the suite yet has none, and
+    // the Console Output tab then says so.
+    const expectedFile = path.join(ROOT, "tests", "expected", `aes-${keySize}.txt`);
+    const output = existsSync(expectedFile)
+        ? (await readFile(expectedFile, "utf8")).replace(/\r\n/g, "\n").trimEnd()
+        : "";
     return {
         id: entry.fixedId ? entry.id : `${entry.id}-${keySize}`,
         name: entry.name,
@@ -82,6 +89,7 @@ async function readImplementation(entry, keySize, file) {
         mode,
         file,
         folder: entry.fixedId ? entry.folder : `${entry.folder}/${keySize}bit`,
+        output,
         code,
     };
 }

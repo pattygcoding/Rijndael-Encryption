@@ -1,23 +1,21 @@
 from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
+from Crypto.Util.Padding import pad
 
-def aes_encrypt(plaintext, key):
-    cipher = AES.new(key, AES.MODE_CBC)
-    ciphertext = cipher.encrypt(plaintext)
-    return cipher.iv + ciphertext
+KEY_BITS = 256
+PLAINTEXT = b"The quick brown fox jumps over the lazy dog."
 
-def pad(data):
-    pad_len = AES.block_size - len(data) % AES.block_size
-    return data + bytes([pad_len] * pad_len)
 
-def main():
-    key = get_random_bytes(32)  # 256-bit key
-    plaintext = b"This is a test message for AES-256 encryption!"
-    plaintext = pad(plaintext)
+def main() -> None:
+    key = bytes(range(KEY_BITS // 8))
+    iv = bytes(range(16))
+    ciphertext = AES.new(key, AES.MODE_CBC, iv).encrypt(pad(PLAINTEXT, AES.block_size))
 
-    ciphertext = aes_encrypt(plaintext, key)
+    print(f"AES-{KEY_BITS}-CBC")
+    print(f"KEY={key.hex()}")
+    print(f"IV={iv.hex()}")
+    print(f"PLAINTEXT={PLAINTEXT.decode()}")
+    print(f"CIPHERTEXT={ciphertext.hex()}")
 
-    print("Ciphertext is:", ciphertext.hex())
 
 if __name__ == "__main__":
     main()

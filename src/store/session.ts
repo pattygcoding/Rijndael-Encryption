@@ -47,7 +47,7 @@ interface LocationState {
 function locationState(): LocationState {
     const tail = window.location.pathname.slice(APP_DIR.length).replace(/\/+$/, "");
     const parts = tail ? tail.split("/") : [];
-    const pathTab = parts.length === 2 && /^(code|overview)$/.test(parts[1])
+    const pathTab = parts.length === 2 && /^(code|overview|output)$/.test(parts[1])
         ? (parts[1] as TabId)
         : null;
     const params = new URLSearchParams(window.location.search || "");
@@ -55,7 +55,7 @@ function locationState(): LocationState {
     const rawTab = pathTab || params.get("tab");
     return {
         langId: data.knownLang(langId) ? langId : null,
-        tab: rawTab === "overview" ? "overview" : "code",
+        tab: rawTab === "overview" || rawTab === "output" ? rawTab : "code",
         explicit: !!(pathTab || params.get("tab")),
     };
 }
@@ -116,6 +116,11 @@ export const repoFolderName = computed<string>(() =>
 export const repoUrl = computed<string>(() =>
     currentItem.value ? data.repoUrlFor(currentItem.value) : "",
 );
+
+// The verified capture from tests/expected, shown by the Console Output tab.
+export const currentOutput = computed<string>(() => currentItem.value?.output ?? "");
+
+export const outputAvailable = computed<boolean>(() => currentOutput.value.length > 0);
 
 export const metaLine = computed<string>(() => {
     const meta = data.DATA?.meta;

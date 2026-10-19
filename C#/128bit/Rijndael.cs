@@ -2,51 +2,44 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-class Aes128Encryption
+class RijndaelCbc
 {
-    static void Main()
+    private const int KeyBits = 128;
+    private const string Plaintext = "The quick brown fox jumps over the lazy dog.";
+
+    private static byte[] Sequence(int length)
     {
-        using (Aes aesAlg = Aes.Create())
+        byte[] bytes = new byte[length];
+        for (int i = 0; i < length; i++)
         {
-            aesAlg.KeySize = 128;
-            aesAlg.GenerateKey();
-            aesAlg.GenerateIV();
-
-            byte[] encrypted = EncryptStringToBytes_Aes("This is a test message for AES-128 encryption!", aesAlg.Key, aesAlg.IV);
-
-            Console.WriteLine("Ciphertext is: " + BitConverter.ToString(encrypted).Replace("-", ""));
+            bytes[i] = (byte)i;
         }
+        return bytes;
     }
 
-    static byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key, byte[] IV)
+    static void Main()
     {
-        if (plainText == null || plainText.Length <= 0)
-            throw new ArgumentNullException(nameof(plainText));
-        if (Key == null || Key.Length <= 0)
-            throw new ArgumentNullException(nameof(Key));
-        if (IV == null || IV.Length <= 0)
-            throw new ArgumentNullException(nameof(IV));
+        byte[] key = Sequence(KeyBits / 8);
+        byte[] iv = Sequence(16);
+        byte[] input = Encoding.UTF8.GetBytes(Plaintext);
 
-        byte[] encrypted;
+        using Aes aes = Aes.Create();
+        aes.KeySize = KeyBits;
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
+        aes.Key = key;
+        aes.IV = iv;
 
-        using (Aes aesAlg = Aes.Create())
+        byte[] ciphertext;
+        using (ICryptoTransform encryptor = aes.CreateEncryptor())
         {
-            aesAlg.Key = Key;
-            aesAlg.IV = IV;
-
-            ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
-
-            using (System.IO.MemoryStream msEncrypt = new System.IO.MemoryStream())
-            {
-                using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-                using (System.IO.StreamWriter swEncrypt = new System.IO.StreamWriter(csEncrypt))
-                {
-                    swEncrypt.Write(plainText);
-                }
-                encrypted = msEncrypt.ToArray();
-            }
+            ciphertext = encryptor.TransformFinalBlock(input, 0, input.Length);
         }
 
-        return encrypted;
+        Console.WriteLine($"AES-{KeyBits}-CBC");
+        Console.WriteLine($"KEY={Convert.ToHexString(key).ToLowerInvariant()}");
+        Console.WriteLine($"IV={Convert.ToHexString(iv).ToLowerInvariant()}");
+        Console.WriteLine($"PLAINTEXT={Plaintext}");
+        Console.WriteLine($"CIPHERTEXT={Convert.ToHexString(ciphertext).ToLowerInvariant()}");
     }
 }

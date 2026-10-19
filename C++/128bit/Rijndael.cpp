@@ -1,52 +1,66 @@
 #include <openssl/evp.h>
-#include <openssl/rand.h>
-#include <iostream>
-#include <vector>
 #include <cstring>
+#include <iomanip>
+#include <iostream>
+#include <string>
+#include <vector>
 
-void handleErrors() {
-    ERR_print_errors_fp(stderr);
-    abort();
+namespace {
+
+constexpr int kKeyBits = 128;
+constexpr int kKeyLength = kKeyBits / 8;
+constexpr const char *kPlaintext = "The quick brown fox jumps over the lazy dog.";
+
+std::vector<unsigned char> sequence(int length) {
+    std::vector<unsigned char> bytes(static_cast<std::size_t>(length));
+    for (int i = 0; i < length; ++i) {
+        bytes[static_cast<std::size_t>(i)] = static_cast<unsigned char>(i);
+    }
+    return bytes;
 }
 
-void aes_encrypt(const unsigned char* plaintext, int plaintext_len, const unsigned char* key,
-                 const unsigned char* iv, unsigned char* ciphertext, int& ciphertext_len) {
-    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-    if (!ctx) handleErrors();
-
-    if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv))
-        handleErrors();
-
-    int len;
-    if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len))
-        handleErrors();
-    ciphertext_len = len;
-
-    if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len)) handleErrors();
-    ciphertext_len += len;
-
-    EVP_CIPHER_CTX_free(ctx);
+void print_hex(const char *label, const std::vector<unsigned char> &data) {
+    std::cout << label << "=";
+    for (unsigned char byte : data) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0')
+                  << static_cast<int>(byte);
+    }
+    std::cout << std::dec << "\n";
 }
+
+}  // namespace
 
 int main() {
-    // 128-bit key
-    unsigned char key[16];
-    if (!RAND_bytes(key, sizeof(key))) handleErrors();
+    const std::vector<unsigned char> key = sequence(kKeyLength);
+    const std::vector<unsigned char> iv = sequence(16);
+    const std::size_t plaintext_length = std::strlen(kPlaintext);
+    std::vector<unsigned char> ciphertext(plaintext_length + 16);
 
-    // 128-bit IV
-    unsigned char iv[16];
-    if (!RAND_bytes(iv, sizeof(iv))) handleErrors();
+    int written = 0;
+    int final_length = 0;
 
-    const char* plaintext = "This is a test message for AES-128 encryption!";
-    unsigned char ciphertext[128];
-    int ciphertext_len;
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    if (ctx == nullptr) {
+        return 1;
+    }
+    if (EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), nullptr, key.data(), iv.data()) != 1) {
+        return 2;
+    }
+    if (EVP_EncryptUpdate(ctx, ciphertext.data(), &written,
+                          reinterpret_cast<const unsigned char *>(kPlaintext),
+                          static_cast<int>(plaintext_length)) != 1) {
+        return 3;
+    }
+    if (EVP_EncryptFinal_ex(ctx, ciphertext.data() + written, &final_length) != 1) {
+        return 4;
+    }
+    EVP_CIPHER_CTX_free(ctx);
+    ciphertext.resize(static_cast<std::size_t>(written + final_length));
 
-    aes_encrypt((unsigned char*)plaintext, strlen(plaintext), key, iv, ciphertext, ciphertext_len);
-
-    std::cout << "Ciphertext is: ";
-    for (int i = 0; i < ciphertext_len; i++)
-        std::cout << std::hex << (int)ciphertext[i];
-    std::cout << std::endl;
-
+    std::cout << "AES-" << kKeyBits << "-CBC\n";
+    print_hex("KEY", key);
+    print_hex("IV", iv);
+    std::cout << "PLAINTEXT=" << kPlaintext << "\n";
+    print_hex("CIPHERTEXT", ciphertext);
     return 0;
 }

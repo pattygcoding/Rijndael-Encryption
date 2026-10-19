@@ -1,52 +1,41 @@
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.SecureRandom;
-import java.util.Base64;
+import java.nio.charset.StandardCharsets;
 
-public class AES192Example {
+public class Rijndael {
 
-    public static String encrypt(String plaintext, SecretKey key, IvParameterSpec iv) throws Exception {
+    private static final int KEY_BITS = 192;
+    private static final String PLAINTEXT = "The quick brown fox jumps over the lazy dog.";
+
+    public static void main(String[] args) throws Exception {
+        byte[] key = sequence(KEY_BITS / 8);
+        byte[] iv = sequence(16);
+
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-        byte[] ciphertext = cipher.doFinal(plaintext.getBytes("UTF-8"));
-        return Base64.getEncoder().encodeToString(ciphertext);
+        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
+        byte[] ciphertext = cipher.doFinal(PLAINTEXT.getBytes(StandardCharsets.UTF_8));
+
+        System.out.println("AES-" + KEY_BITS + "-CBC");
+        System.out.println("KEY=" + hex(key));
+        System.out.println("IV=" + hex(iv));
+        System.out.println("PLAINTEXT=" + PLAINTEXT);
+        System.out.println("CIPHERTEXT=" + hex(ciphertext));
     }
 
-    public static String decrypt(String ciphertext, SecretKey key, IvParameterSpec iv) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, key, iv);
-        byte[] decryptedText = cipher.doFinal(Base64.getDecoder().decode(ciphertext));
-        return new String(decryptedText, "UTF-8");
-    }
-
-    public static void main(String[] args) {
-        try {
-            // Generate a 192-bit AES key
-            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-            keyGen.init(192);
-            SecretKey key = keyGen.generateKey();
-
-            // Generate a random IV
-            byte[] ivBytes = new byte[16];
-            SecureRandom random = new SecureRandom();
-            random.nextBytes(ivBytes);
-            IvParameterSpec iv = new IvParameterSpec(ivBytes);
-
-            String plaintext = "This is a secret message";
-
-            // Encrypt the plaintext
-            String ciphertext = encrypt(plaintext, key, iv);
-            System.out.println("Encrypted (192-bit): " + ciphertext);
-
-            // Decrypt the ciphertext
-            String decryptedText = decrypt(ciphertext, key, iv);
-            System.out.println("Decrypted: " + decryptedText);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+    private static byte[] sequence(int length) {
+        byte[] bytes = new byte[length];
+        for (int i = 0; i < length; i++) {
+            bytes[i] = (byte) i;
         }
+        return bytes;
+    }
+
+    private static String hex(byte[] data) {
+        StringBuilder out = new StringBuilder(data.length * 2);
+        for (byte value : data) {
+            out.append(String.format("%02x", value));
+        }
+        return out.toString();
     }
 }

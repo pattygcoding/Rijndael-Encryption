@@ -31,7 +31,8 @@ const facts = computed(() => {
                 This example encrypts a test message with a {{ currentItem.keySize }}-bit key using
                 <span class="text-fg-soft">{{ currentItem.api }}</span> in
                 <span class="text-fg-soft">{{ currentItem.mode }}</span> mode. The full, runnable source is
-                on the <span class="text-fg-soft">Source Code</span> tab.
+                on the <span class="text-fg-soft">Source Code</span> tab, and the exact ciphertext it produces —
+                identical in every language — is on the <span class="text-fg-soft">Console Output</span> tab.
             </p>
 
             <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

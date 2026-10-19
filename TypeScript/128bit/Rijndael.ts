@@ -1,20 +1,23 @@
-import * as crypto from 'crypto';
+import { createCipheriv } from "node:crypto";
 
-function aesEncrypt(plaintext: string, key: Buffer): string {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-192-cbc', key, iv);
-    let encrypted = cipher.update(plaintext, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return iv.toString('hex') + encrypted;
+const KEY_BITS = 128;
+const PLAINTEXT = "The quick brown fox jumps over the lazy dog.";
+
+function sequence(length: number): Buffer {
+    return Buffer.from(Array.from({ length }, (_, index) => index));
 }
 
-function main() {
-    const key = crypto.randomBytes(24); // 192-bit key
-    const plaintext = "This is a test message for AES-192 encryption!";
-    
-    const ciphertext = aesEncrypt(plaintext, key);
-    
-    console.log("Ciphertext is: " + ciphertext);
+function main(): void {
+    const key = sequence(KEY_BITS / 8);
+    const iv = sequence(16);
+    const cipher = createCipheriv(`aes-${KEY_BITS}-cbc`, key, iv);
+    const ciphertext = Buffer.concat([cipher.update(PLAINTEXT, "utf8"), cipher.final()]);
+
+    console.log(`AES-${KEY_BITS}-CBC`);
+    console.log(`KEY=${key.toString("hex")}`);
+    console.log(`IV=${iv.toString("hex")}`);
+    console.log(`PLAINTEXT=${PLAINTEXT}`);
+    console.log(`CIPHERTEXT=${ciphertext.toString("hex")}`);
 }
 
 main();

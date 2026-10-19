@@ -1,24 +1,44 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Crypto.Cipher.AES (AES192)
-import Crypto.Cipher.Types (cipherInit, ctrCombine)
+import Crypto.Cipher.Types (IV, cbcEncrypt, cipherInit, makeIV)
 import Crypto.Error (CryptoFailable(..))
-import Data.ByteArray (convert)
+import Data.ByteArray.Encoding (Base(Base16), convertToBase)
 import Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as C8
 
-encryptAES192 :: ByteString -> ByteString -> ByteString -> ByteString
-encryptAES192 key iv plaintext =
-    case cipherInit key of
-        CryptoFailed err    -> error (show err)
-        CryptoPassed cipher -> ctrCombine cipher iv plaintext
+keyBits :: Int
+keyBits = 192
+
+keyBytes :: ByteString
+keyBytes = B.pack [0 .. fromIntegral (keyBits `div` 8 - 1)]
+
+ivBytes :: ByteString
+ivBytes = B.pack [0 .. 15]
+
+plaintext :: ByteString
+plaintext = "The quick brown fox jumps over the lazy dog."
+
+padPkcs7 :: ByteString -> ByteString
+padPkcs7 input =
+    let padLength = 16 - (B.length input `mod` 16)
+    in input <> B.replicate padLength (fromIntegral padLength)
+
+hex :: ByteString -> String
+hex = C8.unpack . (convertToBase Base16 :: ByteString -> ByteString)
 
 main :: IO ()
-main = do
-    let plaintext = "This is a secret message."
-        iv = "1234567890123456"  -- 16 bytes IV for AES
-        key192 = "0123456789abcdef01234567"  -- 24 bytes key
-
-    putStrLn "AES 192-bit Encryption:"
-    let ciphertext192 = encryptAES192 key192 iv plaintext
-    print (convert ciphertext192 :: ByteString)
+main =
+    case cipherInit keyBytes :: CryptoFailable AES192 of
+        CryptoFailed err -> error (show err)
+        CryptoPassed cipher ->
+            case makeIV ivBytes :: Maybe (IV AES192) of
+                Nothing -> error "invalid IV"
+                Just iv -> do
+                    let ciphertext = cbcEncrypt cipher iv (padPkcs7 plaintext)
+                    putStrLn ("AES-" ++ show keyBits ++ "-CBC")
+                    putStrLn ("KEY=" ++ hex keyBytes)
+                    putStrLn ("IV=" ++ hex ivBytes)
+                    putStrLn ("PLAINTEXT=" ++ C8.unpack plaintext)
+                    putStrLn ("CIPHERTEXT=" ++ hex ciphertext)

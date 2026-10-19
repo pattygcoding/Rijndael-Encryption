@@ -1,5 +1,9 @@
 node_modules/
 dist/
 public/encryption-data.js
+tests/build/
+__pycache__/
+.metals/
+.vscode/
 *.local
 .DS_Store

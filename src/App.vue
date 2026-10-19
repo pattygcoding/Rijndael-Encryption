@@ -3,6 +3,7 @@ import { onBeforeUnmount, onMounted } from "vue";
 import AppSidebar from "./components/AppSidebar.vue";
 import DetailHeader from "./components/DetailHeader.vue";
 import EmptyState from "./components/EmptyState.vue";
+import OutputView from "./components/OutputView.vue";
 import OverviewView from "./components/OverviewView.vue";
 import SourceView from "./components/SourceView.vue";
 import { hasData } from "./store/data";
@@ -51,6 +52,7 @@ onBeforeUnmount(() => {
         <main class="flex-1 overflow-hidden p-3 sm:p-6 flex flex-col">
             <template v-if="hasData">
                 <SourceView v-if="state.tab === 'code'" />
+                <OutputView v-else-if="state.tab === 'output'" />
                 <OverviewView v-else />
             </template>
             <EmptyState v-else />

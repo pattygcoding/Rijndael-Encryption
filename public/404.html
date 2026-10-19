@@ -32,7 +32,7 @@
         (function () {
             var parts = window.location.pathname.replace(/\/+$/, "").split("/");
             var last = parts.pop() || "";
-            var tab = last === "code" || last === "overview" ? last : "";
+            var tab = last === "code" || last === "overview" || last === "output" ? last : "";
             if (tab) { last = parts.pop() || ""; }
             // An implementation id is a bare slug (e.g. "c-128").  Anything else - a
             // missing .html, a directory - is junk, so drop one more level and keep

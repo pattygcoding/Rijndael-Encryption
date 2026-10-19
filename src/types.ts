@@ -1,7 +1,7 @@
 // The shape of `public/encryption-data.js`, which tools/generate-data.mjs writes
 // from the real repository.  Every renderer works from this one shape.
 
-export type TabId = "code" | "overview";
+export type TabId = "code" | "overview" | "output";
 
 export interface Implementation {
     /** The address slug, e.g. `c-128` (`/c-128`). */
@@ -22,6 +22,8 @@ export interface Implementation {
     file: string;
     /** The folder the GitHub link points at. */
     folder: string;
+    /** The verified output every implementation of this key size prints. */
+    output: string;
     code: string;
 }
 

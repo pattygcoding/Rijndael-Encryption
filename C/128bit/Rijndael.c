@@ -1,55 +1,57 @@
-#include <openssl/conf.h>
 #include <openssl/evp.h>
-#include <openssl/err.h>
-#include <openssl/rand.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
-void handleErrors(void) {
-    ERR_print_errors_fp(stderr);
-    abort();
+#define KEY_BITS 128
+#define KEY_LENGTH (KEY_BITS / 8)
+
+static const char *PLAINTEXT = "The quick brown fox jumps over the lazy dog.";
+
+static void make_bytes(unsigned char *buffer, int length) {
+    for (int i = 0; i < length; i++) {
+        buffer[i] = (unsigned char)i;
+    }
 }
 
-int aes_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
-                unsigned char *iv, unsigned char *ciphertext) {
-    EVP_CIPHER_CTX *ctx;
-    int len;
-    int ciphertext_len;
-
-    if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
-
-    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv))
-        handleErrors();
-
-    if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len))
-        handleErrors();
-    ciphertext_len = len;
-
-    if(1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len)) handleErrors();
-    ciphertext_len += len;
-
-    EVP_CIPHER_CTX_free(ctx);
-
-    return ciphertext_len;
+static void print_hex(const char *label, const unsigned char *data, int length) {
+    printf("%s=", label);
+    for (int i = 0; i < length; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\n");
 }
 
 int main(void) {
-    unsigned char key[16]; // 128-bit key
-    if(!RAND_bytes(key, sizeof(key))) handleErrors();
+    unsigned char key[KEY_LENGTH];
+    unsigned char iv[16];
+    unsigned char ciphertext[256];
+    int written = 0;
+    int final_length = 0;
 
-    unsigned char iv[16]; // 128-bit IV
-    if(!RAND_bytes(iv, sizeof(iv))) handleErrors();
+    make_bytes(key, KEY_LENGTH);
+    make_bytes(iv, 16);
 
-    unsigned char *plaintext = (unsigned char *)"This is a test message for AES-128 encryption!";
-    unsigned char ciphertext[128];
-
-    int ciphertext_len = aes_encrypt(plaintext, strlen((char *)plaintext), key, iv, ciphertext);
-
-    printf("Ciphertext is: ");
-    for(int i = 0; i < ciphertext_len; i++) {
-        printf("%02x", ciphertext[i]);
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    if (ctx == NULL) {
+        return 1;
     }
-    printf("\n");
+    if (EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv) != 1) {
+        return 2;
+    }
+    if (EVP_EncryptUpdate(ctx, ciphertext, &written,
+                          (const unsigned char *)PLAINTEXT,
+                          (int)strlen(PLAINTEXT)) != 1) {
+        return 3;
+    }
+    if (EVP_EncryptFinal_ex(ctx, ciphertext + written, &final_length) != 1) {
+        return 4;
+    }
+    EVP_CIPHER_CTX_free(ctx);
 
+    printf("AES-%d-CBC\n", KEY_BITS);
+    print_hex("KEY", key, KEY_LENGTH);
+    print_hex("IV", iv, 16);
+    printf("PLAINTEXT=%s\n", PLAINTEXT);
+    print_hex("CIPHERTEXT", ciphertext, written + final_length);
     return 0;
 }

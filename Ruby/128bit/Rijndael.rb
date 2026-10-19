@@ -1,23 +1,19 @@
-require 'openssl'
-require 'securerandom'
+require "openssl"
 
-def aes_encrypt(plaintext, key)
-  cipher = OpenSSL::Cipher.new('aes-128-cbc')
-  cipher.encrypt
-  iv = cipher.random_iv
-  cipher.key = key
+KEY_BITS = 128
+PLAINTEXT = "The quick brown fox jumps over the lazy dog."
 
-  ciphertext = cipher.update(plaintext) + cipher.final
-  iv + ciphertext
-end
+key = (0...(KEY_BITS / 8)).map(&:chr).join
+iv = (0...16).map(&:chr).join
 
-def main
-  key = SecureRandom.random_bytes(16) # 128-bit key
-  plaintext = "This is a test message for AES-128 encryption!"
+cipher = OpenSSL::Cipher.new("aes-#{KEY_BITS}-cbc")
+cipher.encrypt
+cipher.key = key
+cipher.iv = iv
+ciphertext = cipher.update(PLAINTEXT) + cipher.final
 
-  ciphertext = aes_encrypt(plaintext, key)
-
-  puts "Ciphertext is: #{ciphertext.unpack1('H*')}"
-end
-
-main
+puts "AES-#{KEY_BITS}-CBC"
+puts "KEY=#{key.unpack1("H*")}"
+puts "IV=#{iv.unpack1("H*")}"
+puts "PLAINTEXT=#{PLAINTEXT}"
+puts "CIPHERTEXT=#{ciphertext.unpack1("H*")}"

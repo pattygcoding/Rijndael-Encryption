@@ -4,6 +4,7 @@ import type { TabId } from "../types";
 import { languageTag } from "../store/data";
 import {
     currentItem,
+    outputAvailable,
     repoFolderName,
     repoUrl,
     state,
@@ -59,6 +60,7 @@ function tabClass(tab: TabId): string {
             <div class="flex space-x-1 bg-ink-900 border border-line/5 p-1 rounded-md">
                 <button type="button" @click="switchTab('code')" :class="tabClass('code')">Source Code</button>
                 <button type="button" @click="switchTab('overview')" :class="tabClass('overview')">Overview</button>
+                <button v-if="outputAvailable" type="button" @click="switchTab('output')" :class="tabClass('output')">Console Output</button>
             </div>
             <button type="button" @click="toggleTheme()" title="Switch colour theme" aria-label="Switch colour theme"
                     class="flex items-center justify-center w-9 h-9 rounded-md bg-ink-950 border border-line/10 text-fg-muted hover:text-accent hover:border-accent/40 transition">

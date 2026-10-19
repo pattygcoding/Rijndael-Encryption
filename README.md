@@ -6,8 +6,8 @@ Some of my Rijndael encryption examples in many different programming languages.
 
 `src/` is a Vue 3 + TypeScript app built by Vite: a fully client-side dashboard
 (no backend, no live compilers) with a sidebar of every implementation and a main
-panel whose tabs are **Source Code** and **Overview**. It also has a language
-search box, and Category and Key size filters.
+panel whose tabs are **Source Code**, **Overview** and **Console Output**. It also
+has a language search box, and Category and Key size filters.
 
 Every implementation has its own address, `/<language>-<bits>` — `/c-128`,
 `/csharp-256`, `/python-cryptography` — and the sidebar entries are real links, so
@@ -32,6 +32,67 @@ so a new implementation shows up without editing the app. Every generated entry
 links back to its exact folder on GitHub (`C#` is URL-encoded as `C%23`).
 
 The published site lives at **<https://encryption.pattygcoding.com/>**.
+
+## Shared console protocol
+
+Every implementation prints the same five lines for its key size, so the same
+ciphertext comes out of every language. The protocol is defined once in
+`tests/reference.py`:
+
+```
+AES-<bits>-CBC
+KEY=<lowercase hex, bits/8 bytes: 00 01 02 ...>
+IV=<lowercase hex, 16 bytes: 00 01 ... 0f>
+PLAINTEXT=The quick brown fox jumps over the lazy dog.
+CIPHERTEXT=<lowercase hex>
+```
+
+* AES in **CBC** mode with **PKCS#7** padding (Java/Kotlin name it
+  `AES/CBC/PKCS5Padding`, which is the same padding for a 16-byte block).
+* The key and IV are fixed and derived from their index, never random, so the
+  output is deterministic and comparable byte for byte.
+* Hex is lowercase and the newline is `\n`; the suite normalises CRLF, so a
+  Windows console is fine.
+
+For example, `tests/expected/aes-128.txt` is:
+
+```
+AES-128-CBC
+KEY=000102030405060708090a0b0c0d0e0f
+IV=000102030405060708090a0b0c0d0e0f
+PLAINTEXT=The quick brown fox jumps over the lazy dog.
+CIPHERTEXT=d5f239401cf82914474428e33d8b1c9e380a8f51f8800d23a97775715faf4ba9797190e589891683f9ddd0917270b0f5
+```
+
+## Tests
+
+`tests/run_tests.py` compiles and runs all 34 implementations and compares each
+one's output with `tests/expected/aes-<bits>.txt`:
+
+```sh
+python tests/run_tests.py                # everything
+python tests/run_tests.py --filter java  # only matching cases
+python tests/run_tests.py --list         # show the cases without running them
+python tests/run_tests.py --update       # regenerate tests/expected from reference.py
+```
+
+A toolchain that is not installed is reported as **SKIP** rather than a failure, so
+the suite is usable with a partial setup. To run everything you need:
+
+| Implementation | Needs |
+| --- | --- |
+| C, C++ | a C/C++ compiler and OpenSSL development files (`libssl-dev`, `brew install openssl`, or OpenSSL for Windows; `OPENSSL_DIR` overrides detection) |
+| C# | .NET SDK 8+ |
+| Haskell | GHC plus `cabal install --lib cryptonite` |
+| Java, Kotlin | JDK 17+ and the Kotlin compiler |
+| JavaScript, TypeScript | Node 20+ (TypeScript comes from `npm install`) |
+| PHP | the `openssl` extension (the suite passes `-d extension=openssl`) |
+| Python | `pip install pycryptodome cryptography` |
+| Ruby | Ruby with OpenSSL support (standard) |
+
+Build output goes to `tests/build/`, which is ignored by git. Add a language by
+writing its implementation to the protocol above, registering it in `LANGUAGES`
+in `tests/run_tests.py`, and running the suite.
 
 ### Deploying to GitHub Pages
 
