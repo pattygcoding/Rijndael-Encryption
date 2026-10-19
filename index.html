@@ -6,8 +6,10 @@
     <title>Rijndael Encryption Showcase</title>
     <!-- The canonical address of the published site on its custom domain. -->
     <link rel="canonical" href="https://encryption.pattygcoding.com/" />
-    <!-- Vite copies `public/` to the site root, so this is where the icon lives. -->
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <!-- The favicon is the portfolio's logo, the same file PG-Website serves.  Vite
+         copies `public/` to the site root, and src/main.ts pins this path to the
+         deployment root so deep routes (`/c/256/overview`) resolve it too. -->
+    <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="description" content="Rijndael/AES encryption in 11 languages at 128, 192 and 256 bits, all producing byte-for-byte identical output. Browse the source and the verified console output of every implementation." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Rijndael Encryption Showcase" />

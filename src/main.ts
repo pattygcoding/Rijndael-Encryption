@@ -5,11 +5,11 @@ import { APP_DIR, initSession } from "./store/session";
 import { initTheme } from "./store/theme";
 import "./styles/app.css";
 
-// The built page rewrites public asset URLs to `./logo.svg`, which a deep address
-// (`/csharp-256/overview`) would resolve below the deployment root.  Pinning the
-// icon to the root keeps every route on the same file.
+// The built page rewrites public asset URLs to `./logo.png`, which a deep address
+// (`/c/256/overview`) would resolve below the deployment root.  Pinning the icon to
+// the root keeps every route on the same file.
 for (const icon of document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]')) {
-    icon.href = APP_DIR + "logo.svg";
+    icon.href = APP_DIR + "logo.png";
 }
 
 // The 404.html shim parks a hop counter in sessionStorage so a junk path cannot

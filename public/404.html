@@ -58,11 +58,11 @@
             if (bits) { target += separator + "bits=" + encodeURIComponent(bits); separator = "&"; }
             if (query) { target += separator + query; }
             document.getElementById("fallback").href = target;
-            // Same icon as the dashboard, built from the path we just climbed.
+            // Same favicon as the dashboard, built from the path we just climbed.
             var icon = document.createElement("link");
             icon.rel = "icon";
-            icon.type = "image/svg+xml";
-            icon.href = parts.join("/") + "/logo.svg";
+            icon.type = "image/png";
+            icon.href = parts.join("/") + "/logo.png";
             document.head.appendChild(icon);
             // Hard stops, so a path that cannot resolve shows the link rather than
             // redirecting in circles: at most four hops, and never re-request the

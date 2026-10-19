@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Rijndael Encryption">
-    <rect width="64" height="64" rx="12" fill="#05070c"/>
-    <rect x="17" y="28" width="30" height="22" rx="5" fill="none" stroke="#8debc4" stroke-width="3"/>
-    <path d="M23 28v-5a9 9 0 0 1 18 0v5" fill="none" stroke="#8debc4" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="32" cy="38" r="2.6" fill="#8debc4"/>
-    <path d="M32 41v4" stroke="#8debc4" stroke-width="2.6" stroke-linecap="round"/>
-</svg>
